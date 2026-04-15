@@ -1,0 +1,11 @@
+[07-Apr-2026 06:52:13 America/Boise] PHP Warning:  Use of undefined constant DIR - assumed 'DIR' (this will throw an Error in a future version of PHP) in /home4/ecgoldne/public_html/pd_stock/test.php on line 15
+[07-Apr-2026 06:52:13 America/Boise] PHP Warning:  file_put_contents(DIR/log.txt): failed to open stream: No such file or directory in /home4/ecgoldne/public_html/pd_stock/test.php on line 21
+[07-Apr-2026 06:52:46 America/Boise] PHP Warning:  Use of undefined constant DIR - assumed 'DIR' (this will throw an Error in a future version of PHP) in /home4/ecgoldne/public_html/pd_stock/test.php on line 15
+[07-Apr-2026 06:52:46 America/Boise] PHP Warning:  file_put_contents(DIR/log.txt): failed to open stream: No such file or directory in /home4/ecgoldne/public_html/pd_stock/test.php on line 21
+[07-Apr-2026 07:05:44 America/Boise] PHP Warning:  Use of undefined constant DIR - assumed 'DIR' (this will throw an Error in a future version of PHP) in /home4/ecgoldne/public_html/pd_stock/test.php on line 3
+[07-Apr-2026 07:09:04 America/Boise] PHP Warning:  Use of undefined constant _DIR_ - assumed '_DIR_' (this will throw an Error in a future version of PHP) in /home4/ecgoldne/public_html/pd_stock/test.php on line 2
+[07-Apr-2026 07:09:04 America/Boise] PHP Warning:  file_put_contents(_DIR_/log.txt): failed to open stream: No such file or directory in /home4/ecgoldne/public_html/pd_stock/test.php on line 4
+[07-Apr-2026 07:09:33 America/Boise] PHP Warning:  Use of undefined constant _DIR_ - assumed '_DIR_' (this will throw an Error in a future version of PHP) in /home4/ecgoldne/public_html/pd_stock/test.php on line 2
+[07-Apr-2026 07:12:15 America/Boise] PHP Warning:  Use of undefined constant DIR - assumed 'DIR' (this will throw an Error in a future version of PHP) in /home4/ecgoldne/public_html/pd_stock/test.php on line 3
+[07-Apr-2026 07:28:39 America/Boise] PHP Warning:  Use of undefined constant DIR - assumed 'DIR' (this will throw an Error in a future version of PHP) in /home4/ecgoldne/public_html/pd_stock/test.php on line 3
+[07-Apr-2026 07:28:39 America/Boise] PHP Warning:  file_put_contents(DIR/log.txt): failed to open stream: No such file or directory in /home4/ecgoldne/public_html/pd_stock/test.php on line 5
