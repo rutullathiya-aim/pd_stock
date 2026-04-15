@@ -29,6 +29,49 @@ function showLess(className, container) {
     container.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function filterSidebarByDate(selectedDate) {
+    const logItems = document.querySelectorAll('.log-item');
+    const syncControls = document.getElementById('sync-controls');
+    const vendorControls = document.getElementById('vendor-controls');
+
+    // Reset view if no date selected
+    if (!selectedDate) {
+        // Simple way to reset: show first 10 for each category
+        const syncItems = document.querySelectorAll('#sync-list-container .log-item');
+        const vendorItems = document.querySelectorAll('#vendor-list-container .log-item');
+
+        syncItems.forEach((el, i) => i < 10 ? el.classList.remove('hidden-log') : el.classList.add('hidden-log'));
+        vendorItems.forEach((el, i) => i < 10 ? el.classList.remove('hidden-log') : el.classList.add('hidden-log'));
+
+        if (syncControls) syncControls.style.display = (syncItems.length > 10) ? 'flex' : 'none';
+        if (vendorControls) vendorControls.style.display = (vendorItems.length > 10) ? 'flex' : 'none';
+
+        // Ensure buttons state: show-more visible, show-less hidden
+        if (syncControls) {
+            syncControls.querySelector('.show-more').style.display = 'block';
+            syncControls.querySelector('.show-less').style.display = 'none';
+        }
+        if (vendorControls) {
+            vendorControls.querySelector('.show-more').style.display = 'block';
+            vendorControls.querySelector('.show-less').style.display = 'none';
+        }
+        return;
+    }
+
+    // Filtered State
+    logItems.forEach(el => {
+        if (el.dataset.date === selectedDate) {
+            el.classList.remove('hidden-log');
+        } else {
+            el.classList.add('hidden-log');
+        }
+    });
+
+    // Hide controls when date filter is active to keep UI simple
+    if (syncControls) syncControls.style.display = 'none';
+    if (vendorControls) vendorControls.style.display = 'none';
+}
+
 async function loadLog(filename, type) {
     document.querySelectorAll('.log-item').forEach(el => el.classList.remove('active'));
     event.currentTarget.classList.add('active');
@@ -57,12 +100,13 @@ async function loadLog(filename, type) {
                 document.getElementById('search-sku').value = '';
                 document.getElementById('filter-status').value = '';
 
-                // Reset custom dropdown UI
-                const customTrigger = document.querySelector('.custom-select-trigger');
-                if (customTrigger) {
-                    customTrigger.textContent = 'All';
-                    document.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
-                    const defaultOpt = document.querySelector('.custom-option[data-value=""]');
+                // Reset status dropdown UI specifically
+                const statusSelect = document.getElementById('custom-status-select');
+                if (statusSelect) {
+                    const customTrigger = statusSelect.querySelector('.custom-select-trigger');
+                    if (customTrigger) customTrigger.textContent = 'All';
+                    statusSelect.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+                    const defaultOpt = statusSelect.querySelector('.custom-option[data-value=""]');
                     if (defaultOpt) defaultOpt.classList.add('selected');
                 }
 
@@ -283,8 +327,14 @@ document.addEventListener('click', function (e) {
         wrapper.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
         option.classList.add('selected');
 
-        document.getElementById('filter-status').value = option.dataset.value;
-        applyFilters();
+        const val = option.dataset.value;
+        if (wrapper.id === 'date-filter-wrapper') {
+            document.getElementById('sidebar-date-filter').value = val;
+            filterSidebarByDate(val);
+        } else {
+            document.getElementById('filter-status').value = val;
+            applyFilters();
+        }
         return;
     }
 

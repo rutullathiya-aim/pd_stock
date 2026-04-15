@@ -5,7 +5,6 @@
     --sidebar: #ffffff;
     --card: #ffffff;
     --accent: #ed1f26;
-    /* ShopTrophies Red */
     --accent-hover: #ef4a4f;
     --text: #0f172a;
     --muted: #64748b;
@@ -363,7 +362,7 @@ main {
 .custom-select-wrapper {
     position: relative;
     user-select: none;
-    width: 200px;
+    width: 250px;
 }
 
 .custom-select {
@@ -801,4 +800,28 @@ input::placeholder {
 .show-less:hover {
     opacity: 1;
     text-decoration: underline;
+}
+
+/* --- Sidebar Date Filter --- */
+.sidebar-filter-container {
+    padding: 0 20px;
+    margin-bottom: 25px;
+}
+
+.sidebar-filter-container .custom-select {
+    width: 100%;
+}
+
+.sidebar-filter-container .custom-select-trigger {
+    background: #ffffff;
+    border-color: #d1d5db;
+    color: var(--text);
+}
+
+.sidebar-filter-container .custom-options {
+    background: #ffffff;
+}
+
+.sidebar-filter-container .custom-option {
+    color: var(--text);
 }

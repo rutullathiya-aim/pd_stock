@@ -58,7 +58,6 @@ if (isset($_GET['ajax']) && isset($_GET['file'])) {
                 $parsedLines[] = ['raw' => $line];
             }
         }
-        $parsedLines = array_reverse($parsedLines);
         echo json_encode(['lines' => $parsedLines]);
     }
     exit;
@@ -76,6 +75,16 @@ function getLogs($dir, $pattern) {
 $syncLogs   = getLogs(__DIR__ . '/logs/sync', 'sync-*.log');
 $vendorLogs = getLogs(__DIR__ . '/logs/vendor', 'vendor_*.json');
 $errorLogs  = getLogs(__DIR__ . '/logs', 'error-*.log');
+
+// Extract unique dates for filtering
+$allDates = [];
+foreach (array_merge($syncLogs, $vendorLogs) as $log) {
+    if (preg_match('/\d{4}-\d{2}-\d{2}/', $log, $matches)) {
+        $allDates[] = $matches[0];
+    }
+}
+$allDates = array_unique($allDates);
+rsort($allDates);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -94,10 +103,28 @@ $errorLogs  = getLogs(__DIR__ . '/logs', 'error-*.log');
         </div>
 
         <div class="log-section">
+            <div class="section-title">Filter by Date</div>
+            <div class="custom-select-wrapper sidebar-filter-container">
+                <div class="custom-select" id="date-filter-wrapper">
+                    <div class="custom-select-trigger">All Dates</div>
+                    <div class="custom-options">
+                        <div class="custom-option selected" data-value="">All Dates</div>
+                        <?php foreach($allDates as $date): ?>
+                            <div class="custom-option" data-value="<?= $date ?>"><?= date('M d, Y', strtotime($date)) ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <input type="hidden" id="sidebar-date-filter" value="">
+            </div>
+        </div>
+
+        <div class="log-section">
             <div class="section-title">Sync History</div>
             <div id="sync-list-container">
-                <?php foreach($syncLogs as $index => $file): ?>
-                    <div class="log-item <?= $index >= 10 ? 'hidden-log sync-hidden' : '' ?>" onclick="loadLog('<?= $file ?>', 'sync')"><?= str_replace(['sync-', '.log'], '', $file) ?></div>
+                <?php foreach($syncLogs as $index => $file): 
+                    $date = preg_match('/\d{4}-\d{2}-\d{2}/', $file, $m) ? $m[0] : '';
+                ?>
+                    <div class="log-item <?= $index >= 10 ? 'hidden-log sync-hidden' : '' ?>" data-date="<?= $date ?>" onclick="loadLog('<?= $file ?>', 'sync')"><?= str_replace(['sync-', '.log'], '', $file) ?></div>
                 <?php endforeach; ?>
             </div>
             <?php if(count($syncLogs) > 10): ?>
@@ -111,8 +138,10 @@ $errorLogs  = getLogs(__DIR__ . '/logs', 'error-*.log');
         <div class="log-section">
             <div class="section-title">Vendor Data</div>
             <div id="vendor-list-container">
-                <?php foreach($vendorLogs as $index => $file): ?>
-                    <div class="log-item <?= $index >= 10 ? 'hidden-log vendor-hidden' : '' ?>" onclick="loadLog('<?= $file ?>', 'vendor')"><?= str_replace(['vendor_', '.json'], '', $file) ?></div>
+                <?php foreach($vendorLogs as $index => $file): 
+                    $date = preg_match('/\d{4}-\d{2}-\d{2}/', $file, $m) ? $m[0] : '';
+                ?>
+                    <div class="log-item <?= $index >= 10 ? 'hidden-log vendor-hidden' : '' ?>" data-date="<?= $date ?>" onclick="loadLog('<?= $file ?>', 'vendor')"><?= str_replace(['vendor_', '.json'], '', $file) ?></div>
                 <?php endforeach; ?>
             </div>
             <?php if(count($vendorLogs) > 10): ?>
