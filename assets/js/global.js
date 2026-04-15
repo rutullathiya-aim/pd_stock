@@ -1,4 +1,6 @@
 let currentLogLines = [];
+let currentPage = 1;
+const pageSize = 50;
 
 function showAll(btn, className) {
     document.querySelectorAll('.' + className).forEach(el => el.classList.remove('hidden-log'));
@@ -9,6 +11,7 @@ async function loadLog(filename, type) {
     document.querySelectorAll('.log-item').forEach(el => el.classList.remove('active'));
     event.currentTarget.classList.add('active');
     document.getElementById('current-file').innerText = 'Viewing: ' + filename;
+    currentPage = 1;
 
     const contentDiv = document.getElementById('main-content');
     contentDiv.innerHTML = '<p style="text-align:center; opacity:0.5;">Loading log data...</p>';
@@ -53,14 +56,41 @@ async function loadLog(filename, type) {
 
 function renderTable(lines, isFilterCall = false) {
     const contentDiv = document.getElementById('main-content');
+
+    // Reset page if it's a filter call (we already did it in applyFilters but safe to ensure)
+    if (isFilterCall) currentPage = 1;
+
     let summaryHtml = '';
 
     // Find summary from the root data so it doesn't get lost during filtering
-    const summaryItem = currentLogLines.find(l => l.raw && l.raw.includes('Inventory: '));
+    const summaryItem = currentLogLines.find(l =>
+        (l.raw && l.raw.includes('Inventory: ')) ||
+        (l.details && typeof l.details === 'string' && l.details.includes('Inventory: '))
+    );
+
     if (summaryItem) {
-        const summaryLine = summaryItem.raw.replace(/\[.*?\] \[SYNC\] /, '');
+        let summaryLine = '';
+        if (summaryItem.raw) {
+            summaryLine = summaryItem.raw.replace(/\[.*?\] \[SYNC\] /, '');
+        } else {
+            summaryLine = summaryItem.details;
+        }
         summaryHtml = `<div class="summary-banner">${summaryLine}</div>`;
     }
+
+    // Filter out the summary item from the list to be paginated/displayed in table
+    const displayLines = lines.filter(l => l !== summaryItem);
+
+    // Pagination slicing
+    const totalLines = displayLines.length;
+    const totalPages = Math.ceil(totalLines / pageSize) || 1;
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIdx = (currentPage - 1) * pageSize;
+    const endIdx = startIdx + pageSize;
+    const pagedLines = displayLines.slice(startIdx, endIdx);
 
     let html = summaryHtml + `<table class="log-table">
                     <thead>
@@ -68,10 +98,15 @@ function renderTable(lines, isFilterCall = false) {
                     </thead>
                     <tbody>`;
 
-    lines.forEach((line, i) => {
-        if (line.raw) {
-            if (line === summaryItem) return; // Skip rendering summary line in table body
-            html += `<tr><td colspan="4" style="opacity: 0.5; font-style: italic; font-size: 0.8rem;">${line.raw}</td></tr>`;
+    pagedLines.forEach((line, i) => {
+        const rowNumber = startIdx + i + 1;
+
+        // Use raw display for systemic lines (where SKU is empty or '-')
+        // or for lines that failed parsing completely.
+        const isSystemic = line.raw && (!line.sku || line.sku === '-');
+
+        if (isSystemic) {
+            html += `<tr><td colspan="5" style="opacity: 0.5; font-style: italic; font-size: 0.8rem;">${line.raw}</td></tr>`;
         } else {
             let statusClass = 'changed';
             if (line.status === 'NOT FOUND IN SHOPIFY') statusClass = 'notfound';
@@ -86,7 +121,7 @@ function renderTable(lines, isFilterCall = false) {
             const productLink = line.pid ? `${SHOP_URL}/${line.pid}` : `${SHOP_URL}?query=${line.sku}`;
 
             html += `<tr>
-                        <td style="opacity:0.5; font-size: 0.8rem;">${i + 1}</td>
+                        <td style="opacity:0.5; font-size: 0.8rem;">${rowNumber}</td>
                         <td><span class="sku-code">${line.sku}</span></td>
                         <td><span class="badge badge-${statusClass}">${statusLabel}</span></td>
                         <td class="details-cell">${detailsStr}</td>
@@ -97,20 +132,40 @@ function renderTable(lines, isFilterCall = false) {
 
     html += `</tbody></table>`;
 
-    if (lines.length === 0 || (lines.length === 1 && lines[0] === summaryItem)) {
+    if (totalLines === 0) {
         html += `<div style="text-align: center; padding: 30px; color: var(--muted);">No records match the current filters.</div>`;
+    } else {
+        // Add Pagination Controls
+        html += `
+            <div class="pagination-container">
+                <button class="pagination-btn" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>&larr; Previous</button>
+                <div class="pagination-info">
+                    Page <input type="number" class="page-input" value="${currentPage}" min="1" max="${totalPages}" onchange="jumpToPage(this, ${totalPages})"> of <span>${totalPages}</span>
+                    <small style="margin-left:10px; opacity:0.6;">(Total: ${totalLines} records)</small>
+                </div>
+                <button class="pagination-btn" onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>Next &rarr;</button>
+            </div>
+        `;
     }
 
     contentDiv.innerHTML = html;
 }
 
-function applyFilters() {
+function applyFilters(isPaginationCall = false) {
+    if (!isPaginationCall) currentPage = 1;
+
     const searchVal = document.getElementById('search-sku').value.toLowerCase().trim();
     const statusVal = document.getElementById('filter-status').value;
 
     const filtered = currentLogLines.filter(line => {
-        if (line.raw && !line.raw.includes('Inventory: ')) return true; // Keep raw systemic lines
-        if (line.raw && line.raw.includes('Inventory: ')) return true;  // Keep summary item (managed by renderTable)
+        // Identify summary item
+        const isSummary = (line.raw && line.raw.includes('Inventory: ')) ||
+            (line.details && typeof line.details === 'string' && line.details.includes('Inventory: '));
+
+        if (isSummary) return true; // Keep summary item (managed by renderTable)
+
+        // Only return true for dedicated systemic/raw display items (no SKU or SKUs marked as '-')
+        if (line.raw && (!line.sku || line.sku === '-')) return true;
 
         let matchSku = true;
         let matchStatus = true;
@@ -125,7 +180,24 @@ function applyFilters() {
         return matchSku && matchStatus;
     });
 
-    renderTable(filtered, true);
+    renderTable(filtered, !isPaginationCall);
+}
+
+function changePage(delta) {
+    currentPage += delta;
+    applyFilters(true);
+    // Scroll to top of content area
+    document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function jumpToPage(input, totalPages) {
+    let page = parseInt(input.value);
+    if (isNaN(page) || page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+
+    currentPage = page;
+    applyFilters(true);
+    document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // --- Sync Process Functions ---

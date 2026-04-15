@@ -42,7 +42,8 @@ if (isset($_GET['ajax']) && isset($_GET['file'])) {
                     'sku'     => $matches[3],
                     'pid'     => !empty($matches[4]) ? $matches[4] : null,
                     'status'  => trim($matches[5]),
-                    'details' => isset($matches[6]) ? trim($matches[6]) : ''
+                    'details' => isset($matches[6]) ? trim($matches[6]) : '',
+                    'raw'     => $line
                 ];
             } elseif (preg_match('/^\[(.*?)\] \[(.*?)\] (.*)$/', $line, $matches)) {
                 $parsedLines[] = [
@@ -50,7 +51,8 @@ if (isset($_GET['ajax']) && isset($_GET['file'])) {
                     'level'   => $matches[2],
                     'status'  => 'SYSTEM',
                     'sku'     => '-',
-                    'details' => $matches[3]
+                    'details' => $matches[3],
+                    'raw'     => $line
                 ];
             } else {
                 $parsedLines[] = ['raw' => $line];
