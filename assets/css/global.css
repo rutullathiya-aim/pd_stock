@@ -293,20 +293,6 @@ main {
     display: none !important;
 }
 
-.show-more {
-    padding: 8px 24px;
-    font-size: 0.75rem;
-    color: var(--accent);
-    cursor: pointer;
-    opacity: 0.7;
-    font-weight: 600;
-}
-
-.show-more:hover {
-    opacity: 1;
-    text-decoration: underline;
-}
-
 @media (max-width: 800px) {
     body {
         flex-direction: column;
@@ -793,4 +779,26 @@ input::placeholder {
 
 .pagination-info span {
     color: var(--text);
+}
+
+/* --- Sidebar Controls --- */
+.sidebar-controls {
+    display: flex;
+    gap: 40px;
+    padding: 10px 20px;
+}
+
+.show-more,
+.show-less {
+    font-size: 0.75rem;
+    color: var(--accent);
+    cursor: pointer;
+    opacity: 0.7;
+    font-weight: 600;
+}
+
+.show-more:hover,
+.show-less:hover {
+    opacity: 1;
+    text-decoration: underline;
 }

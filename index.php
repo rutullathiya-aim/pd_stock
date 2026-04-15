@@ -58,6 +58,7 @@ if (isset($_GET['ajax']) && isset($_GET['file'])) {
                 $parsedLines[] = ['raw' => $line];
             }
         }
+        $parsedLines = array_reverse($parsedLines);
         echo json_encode(['lines' => $parsedLines]);
     }
     exit;
@@ -68,7 +69,7 @@ function getLogs($dir, $pattern) {
     if (!is_dir($dir)) return [];
     $files = glob($dir . '/' . $pattern);
     if (!$files) return [];
-    array_multisort(array_map('filemtime', $files), SORT_DESC, $files);
+    rsort($files); // Sort by filename descending (most recent first based on timestamp in name)
     return array_map('basename', $files);
 }
 
@@ -94,21 +95,31 @@ $errorLogs  = getLogs(__DIR__ . '/logs', 'error-*.log');
 
         <div class="log-section">
             <div class="section-title">Sync History</div>
-            <?php foreach($syncLogs as $index => $file): ?>
-                <div class="log-item <?= $index >= 10 ? 'hidden-log sync-hidden' : '' ?>" onclick="loadLog('<?= $file ?>', 'sync')"><?= str_replace(['sync-', '.log'], '', $file) ?></div>
-            <?php endforeach; ?>
+            <div id="sync-list-container">
+                <?php foreach($syncLogs as $index => $file): ?>
+                    <div class="log-item <?= $index >= 10 ? 'hidden-log sync-hidden' : '' ?>" onclick="loadLog('<?= $file ?>', 'sync')"><?= str_replace(['sync-', '.log'], '', $file) ?></div>
+                <?php endforeach; ?>
+            </div>
             <?php if(count($syncLogs) > 10): ?>
-                <div class="show-more" onclick="showAll(this, 'sync-hidden')">Show all <?= count($syncLogs) ?> logs</div>
+                <div class="sidebar-controls" id="sync-controls">
+                    <div class="show-more" onclick="showMore('sync-hidden', this.parentElement)">Show More</div>
+                    <div class="show-less" style="display:none;" onclick="showLess('sync-hidden', this.parentElement)">Show Less</div>
+                </div>
             <?php endif; ?>
         </div>
 
         <div class="log-section">
             <div class="section-title">Vendor Data</div>
-            <?php foreach($vendorLogs as $index => $file): ?>
-                <div class="log-item <?= $index >= 10 ? 'hidden-log vendor-hidden' : '' ?>" onclick="loadLog('<?= $file ?>', 'vendor')"><?= str_replace(['vendor_', '.json'], '', $file) ?></div>
-            <?php endforeach; ?>
+            <div id="vendor-list-container">
+                <?php foreach($vendorLogs as $index => $file): ?>
+                    <div class="log-item <?= $index >= 10 ? 'hidden-log vendor-hidden' : '' ?>" onclick="loadLog('<?= $file ?>', 'vendor')"><?= str_replace(['vendor_', '.json'], '', $file) ?></div>
+                <?php endforeach; ?>
+            </div>
             <?php if(count($vendorLogs) > 10): ?>
-                <div class="show-more" onclick="showAll(this, 'vendor-hidden')">Show all <?= count($vendorLogs) ?> logs</div>
+                <div class="sidebar-controls" id="vendor-controls">
+                    <div class="show-more" onclick="showMore('vendor-hidden', this.parentElement)">Show More</div>
+                    <div class="show-less" style="display:none;" onclick="showLess('vendor-hidden', this.parentElement)">Show Less</div>
+                </div>
             <?php endif; ?>
         </div>
     </aside>

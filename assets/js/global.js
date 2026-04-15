@@ -2,9 +2,31 @@ let currentLogLines = [];
 let currentPage = 1;
 const pageSize = 50;
 
-function showAll(btn, className) {
-    document.querySelectorAll('.' + className).forEach(el => el.classList.remove('hidden-log'));
-    btn.style.display = 'none';
+function showMore(className, container) {
+    const hiddenItems = document.querySelectorAll('.' + className + '.hidden-log');
+    // Show next 10
+    for (let i = 0; i < Math.min(10, hiddenItems.length); i++) {
+        hiddenItems[i].classList.remove('hidden-log');
+    }
+
+    // Update buttons
+    const remaining = document.querySelectorAll('.' + className + '.hidden-log').length;
+    if (remaining === 0) {
+        container.querySelector('.show-more').style.display = 'none';
+    }
+    container.querySelector('.show-less').style.display = 'block';
+}
+
+function showLess(className, container) {
+    const items = document.querySelectorAll('.' + className);
+    items.forEach(el => el.classList.add('hidden-log'));
+
+    // Reset buttons
+    container.querySelector('.show-more').style.display = 'block';
+    container.querySelector('.show-less').style.display = 'none';
+
+    // Smooth scroll to top of section header
+    container.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function loadLog(filename, type) {
